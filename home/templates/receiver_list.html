@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container" >
+
+    <div class="row">
+        <div class="clo-md-4">
+            <a href ='{% url "creat_receiver"%}' class ='btn btn-success'> Create New </a>
+        </div>
+    </div>
+    <br> <hr> 
+    <dvi class="row">
+        <div class="col-md-12">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th> Receiver name </th>
+                        <th> Receiver TaxID </th>
+                        <th> - </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for receiver in recievers %}
+                    <tr> 
+                        <td>  <a href ="{% url 'edit_receiver' receiver.id %}" >{{ receiver.receiver_name }}  </a></td>
+                        <td>  {{ receiver.receiver_id }} </td>
+                        <td> <a href='{% url "delete_receiver" receiver.id %}'> Delete </a> </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </dvi>
+</div>
+
+{% endblock %}

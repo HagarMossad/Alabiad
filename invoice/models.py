@@ -101,6 +101,9 @@ class EInvoice (models.Model) :
     receiver_address_regionCity=models.CharField(max_length=250 , blank=True , null=True)
     receiver_address_street=models.CharField(max_length=250 , blank=True , null=True)
     receiver_address_buildingNumber=models.CharField(max_length=250 , blank=True , null=True)
+
+
+    # end recsiever section 
     documentType = models.CharField(max_length= 250 , choices=DOCUMENTTYPE )
     documentTypeVersion =  models.CharField(max_length= 250 , choices=DocumentTypeVersion)
     dateTimeIssued = models.DateTimeField(auto_now= False ,auto_now_add=False ,blank=True ,null=True)
@@ -112,6 +115,9 @@ class EInvoice (models.Model) :
     salesOrderDescription =  models.CharField(max_length= 250 , null=True , blank=True)
     proformaInvoiceNumber = models.CharField(max_length= 50 , null=True , blank=True)
     payment = models.ForeignKey(Payment , on_delete=models.CASCADE , null=True , blank=True)
+
+    #main Data 
+    datetimestr =  models.CharField(max_length= 250 , null=True , blank=True)
     invoiceLines = models.ManyToManyField(InvoiceLine)
     totalSalesAmount = models.DecimalField(max_digits=100 , decimal_places=5 ,null=True , blank=True)
     totalDiscountAmount = models.DecimalField(max_digits=100 , decimal_places=5 ,null=True , blank=True)
@@ -124,6 +130,13 @@ class EInvoice (models.Model) :
     docstatus =models.CharField(max_length=500 , blank=True , null=True)
     errro_log =models.CharField(max_length=500 , blank=True , null=True)
     created_date = models.DateTimeField(auto_now_add= True , null =True , blank=True)
+    message_Serv = models.JSONField(null =True , blank =True   )
+
+
+    def save(self , *args , **kwargs):
+        issuer = PayerAccount.objects.all().first()
+        self.issuer_address_street = issuer.issuer_address_street
+        return super(EInvoice, self).save(*args, **kwargs)
 
 @receiver(pre_save ,sender=EInvoice)
 def invoice_totals(sender ,instance , **kwargs):

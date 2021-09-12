@@ -1,3 +1,245 @@
-from django.shortcuts import render
-
+import json
+from django.shortcuts import redirect, render
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+import pandas as pd
 # Create your views here.
+from django.core.paginator import Page, Paginator
+from .models import EInvoice ,InoiveFile
+from django.http import JsonResponse
+from home.models import Receiver ,AccountType
+from payer.models import PayerAccount
+from tax.models import TaXCategory ,taxableItems ,TaxTotals
+from http.client import HTTPSConnection
+from base64 import b64encode, encode
+import ssl
+
+from .column import create_request
+def invoice_list(request):
+    invociesList =    EInvoice.objects.all().order_by('-id')
+    fill_uploauded = InoiveFile.objects.all().order_by('-id')
+    paginator = Paginator(invociesList , 20)
+    page_number = request.GET.get('page')
+    invocies = paginator.get_page(page_number)
+    page = 'invoice_list.html'
+    fl_select = [{"id" :i.id , "value" : i.status } for i in fill_uploauded ] 
+    content = {
+        "invoices" : invocies , 
+        "fl_select" : fl_select
+    }
+    return render(request ,page , content ) 
+
+
+
+
+def create_inoice(request):
+    page = 'invoice_create.html'
+    types = [{'v' :i[0] , 'n' :i[1] }
+                for i in AccountType ]
+    receiver = Receiver.objects.all()
+    issuer = PayerAccount.objects.all()
+    receivers = [{"id" : i.id , "name" : i.receiver_name  } for i in receiver ]
+    issuers = [{"id" : i.id , "name" : i.issuer_name  } for i in issuer ]
+    content = {
+        "types": types ,
+        "receivers" :receivers,
+        "issuers":issuers
+
+    }
+    if request.method == "POST":
+        print(request.POST.get('issuer'))
+        a = EInvoice(
+            payer_account =  PayerAccount.objects.filter(id = request.POST.get('issuer')).first() , 
+            receiver_account =Receiver.objects.filter(id = request.POST.get('receiver')).first() if request.POST.get('receiver') else None
+        )
+        receiver_account =Receiver.objects.filter(id = request.POST.get('receiver')).first()
+       
+        if receiver_account :
+            a.receiver_type = receiver_account.receiver_type
+            a.receiver_id= receiver_account.receiver_id
+            a.receiver_name= receiver_account.receiver_name
+            a.receiver_address_branchId = receiver_account.receiver_address_branchId
+            a.receiver_address_country= receiver_account.receiver_address_country
+            a.receiver_address_governate = receiver_account.receiver_address_governate
+            a.receiver_address_regionCity= receiver_account.receiver_address_regionCity
+            a.receiver_address_street = receiver_account.receiver_address_street
+            a.receiver_address_buildingNumber = receiver_account.receiver_address_buildingNumber
+
+        
+        a.save()
+       
+        return redirect ('edit_invocie' , a.id)
+
+    return render(request , page ,content)
+
+def edit_invocie(request, id):
+    page = 'invoice_create.html'
+    types = [{'v' :i[0] , 'n' :i[1] }
+                for i in AccountType ]
+    receiver = Receiver.objects.all()
+    issuer = PayerAccount.objects.all()
+    receivers = [{"id" : i.id , "name" : i.receiver_name  } for i in receiver ]
+    issuers = [{"id" : i.id , "name" : i.issuer_name  } for i in issuer ]
+    invocie = EInvoice.objects.get(id =id)
+    stat = None
+    if invocie.message_Serv :
+        stat_message =invocie.message_Serv.get('message')
+
+        stat_v = stat_message[2:-1]
+        stat = stat_v.replace('null' , '""')
+    content = {
+        "types": types ,
+        "receivers" :receivers,
+        "issuers":issuers ,
+        "invoice" : invocie ,
+        "stat" :stat
+
+    }
+    return render(request , page ,content)
+def uplaod_sheet(request):
+    if request.method== 'POST' :
+        a = InoiveFile(
+            status = request.POST.get('sheettitle') ,
+            sheet =request.FILES['myfile'] )
+        a.save()
+        create_request(a.id , a.sheet.path)
+    invociesList =    EInvoice.objects.all().order_by('-id')
+    fill_uploauded = InoiveFile.objects.all().order_by('-id')
+    paginator = Paginator(invociesList , 20)
+    # page_number = request.GET.get('page')
+    invocies = paginator.get_page(1)
+    page = 'invoice_list.html'
+    fl_select = [{"id" :a.id , "value" : a.status } ] 
+    content = {
+        "invoices" : invocies , 
+        "fl_select" : fl_select
+    }
+    return render(request ,page , content ) 
+
+    return JsonResponse({"data" :"success"})
+
+
+
+def post_to_auth(request , id ):
+    from reports.views import get_token
+    invoice  = EInvoice.objects.filter(id=id).first()
+    if not invoice :
+        return JsonResponse({'error' : "Invocie Id Error "})
+    form = { "documents":[{
+        "issuer":{ 
+									 "name"   : invoice.issuer_name ,
+									 "id"     : invoice.issuer_id or "",
+									 "type"   : invoice.issuer_type  ,
+									 "address": {
+									 			   "branchID"      :invoice.issuer_address_branchId or ''  ,
+                                                    "country"    :invoice.issuer_address_country or '' ,
+							 			           "governate"     :invoice.issuer_address_governate or ''  ,
+                                                   "regionCity" : invoice.issuer_address_regionCity or '' ,
+							 			           "street"        :invoice.issuer_address_street     ,
+								  				   "buildingNumber":str(invoice.issuer_address_buildingNumber or '')
+								  				
+		
+												} 
+                } ,
+         "receiver":{ 
+									 "name"   : invoice.receiver_name ,
+									 "id"     : invoice.receiver_id or "",
+									 "type"   : invoice.receiver_type  ,
+									 "address": {
+									 			   "branchID"      :invoice.receiver_address_branchId or ''  ,
+                                                    "country"    :invoice.receiver_address_country or '' ,
+							 			           "governate"     :invoice.receiver_address_governate or ''  ,
+                                                   "regionCity" : invoice.receiver_address_regionCity or '' ,
+							 			           "street"        :invoice.receiver_address_street     ,
+								  				   "buildingNumber":str(invoice.receiver_address_buildingNumber or '')
+								  				
+		
+												} 
+                } ,
+        #main info Section 
+        "documentType"             :invoice.documentType,
+        "documentTypeVersion"      :invoice.documentTypeVersion , 
+        # 2021-05-17 12:21:11
+        "dateTimeIssued"            :invoice.datetimestr ,
+        "taxpayerActivityCode"     : str(invoice.taxpayerActivityCode ) ,
+        "internalID"               : str(invoice.internalId or ''),
+        "purchaseOrderReference"   : "",#str(self.purchase_order_reference or ''),
+        "purchaseOrderDescription" : "" ,
+        "salesOrderReference"      : "" ,
+        "salesOrderDescription"    : "" ,
+        "proformaInvoiceNumber"    : "" ,
+        
+
+        #Item section 
+        "invoiceLines" :[ {
+		              'description'     :item.description,
+		              'itemType'        :item.itemType,
+		              'itemCode'        :item.itemCode,
+		              'unitType'        :item.unitType,
+		              'quantity'        :int(item.quantity),
+		              'internalCode'    :item.itemCode,
+		              'salesTotal'      :round(float(item.salesTotal or 0 ) ,5),
+		              'total'           :round( float(item.total or 0) , 5) ,
+		              'valueDifference' :float(item.valueDifference or 0) , 
+		              'totalTaxableFees':0 ,#float(item.total_taxable_fees or 0),
+		              'netTotal'        :round(float(item.netTotal or 0) , 5 )  ,
+		              'itemsDiscount'   : 0, #round((item.item_discount * item.quantity) , 5),
+		              'unitValue'       :   {
+		                                    'currencySold'        :item.unitValue_currencySold,
+		                                    'amountEGP'           :round(float(item.unitValue_amountEGP) , 5),
+		                                    'amountSold'          :float(item.unitValue_amountSold or 0),
+		                                    'currencyExchangeRate':float(item.unitValue_currencyExchangeRate or 0 ),
+		                                    },
+		              'discount'        :  {
+		                                   'rate':0,
+		                                    'amount':round((float(item.discount_amount  or 0) *float(item.quantity) ), 5)
+		                                    },
+
+                        "taxableItems" :[ {"taxType":tax_i.taxType ,
+                                           "amount": round(float(tax_i.amount or 0 ) , 5) , 
+                                            "subType" : tax_i.subType ,
+                                            "rate" :round( float ( tax_i.rate or 0) , 5 )} 
+                                             for tax_i in  item.taxableItems.all()]
+                     
+		             
+		   	 }
+
+
+         for item in  invoice.invoiceLines.all()] , 
+
+        #total Section 
+        "totalDiscountAmount"      :float(invoice.totalDiscountAmount or 0),
+        "totalSalesAmount"         :float(invoice.totalSalesAmount or 0) ,
+        "netAmount"                :float(invoice.netAmount or 0),
+        "taxTotals"                : [
+            {
+                "taxType" : tax_e.taxType ,
+                "amount" : round( float (tax_e.amount or 0))
+            }
+        for tax_e in  
+        invoice.taxTotals.all()],#invoice.taxTotals.all(),
+        "totalAmount"              :float(invoice.totalAmount or 0)   ,
+        "extraDiscountAmount"      :0,
+        "totalItemsDiscountAmount" :0 ,
+
+
+		
+
+
+    }]
+    }
+    token = get_token()
+    headers = {
+				"Authorization"   : 'Bearer %s'%token,
+				"Accept"          : "application/json" ,
+				"Accept-Language" : "ar" ,
+				'Content-Type'    :'application/json' 
+				 }
+
+    c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
+    c.request('POST', '/api/v1.0/documentsubmissions' ,headers=headers , body=json.dumps(form) )
+    res = c.getresponse()
+    data = res.read()
+    return JsonResponse({'message' : str(data)})
+
+

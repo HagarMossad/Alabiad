@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 import os 
 import json
-
+from payer.models import PayerAccount
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 if sys.platform == 'win32' :
@@ -58,8 +58,9 @@ DocumentTypeVersion = [('1.0' , '1.0'),
 
 
 class Receiver(models.Model) :
+    payer = models.ForeignKey(PayerAccount , on_delete=models.CASCADE , null=True , blank=True)
     name = models.CharField (max_length= 250 , null=True , blank=True)
-    receiver_type =models.CharField(max_length=250 , null=True , blank=True)
+    receiver_type =models.CharField(max_length=250 , choices= AccountType ,null=True , blank=True)
     receiver_id=models.CharField(max_length=250  , null=True , blank=True)
     receiver_name=models.CharField(max_length=250 , null=True , blank=True)
     receiver_address_branchId=models.CharField(max_length=250 , null=True , blank=True)
