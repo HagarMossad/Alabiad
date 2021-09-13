@@ -108,7 +108,7 @@ def post_to_auth_upload(id):
 		                                    },
 		              'discount'        :  {
 		                                   'rate':0,
-		                                    'amount':round((float(item.discount_amount  or 0) *float(item.quantity) ), 5)
+		                                    'amount':round((float(item.discount_amount  or 0)  ), 5)
 		                                    },
 
                         "taxableItems" :[ {"taxType":tax_i.taxType ,
@@ -156,6 +156,7 @@ def post_to_auth_upload(id):
     c.request('POST', '/api/v1.0/documentsubmissions' ,headers=headers , body=json.dumps(form) )
     res = c.getresponse()
     data = res.read()
+    print(form)
     return ({'message' : str(data)})
 
 def create_request(uploader_id , pth):
@@ -297,9 +298,12 @@ def e_invoice_form(data):
                     rate =tax.rate 
                     amount = tax.amount
                     if tax.rate and tax.rate > 0  :
-                        amount = (float(rate) / 100 ) * (float(line.unitValue_amountEGP or 0  ) - float(line.discount_amount or 0 ))
+                        amount = ((float(rate) / 100 ) * (float(line.unitValue_amountEGP or 0  ) )) - float(line.discount_amount or 0 )
+                          
+                    amount=  amount * float(line.quantity or 0)
+                    print(amount)
                     in_tax = taxableItems(taxType = tax.taxType , rate = tax.rate ,
-                    subType = tax.subType , amount = amount  , parent_id = line.id , parent_type = 'invoiceLines')
+                    subType = tax.subType , amount = round(amount , 4)  , parent_id = line.id , parent_type = 'invoiceLines')
                     for k , v in tax_types.items() :
                             if k ==  tax.taxType :
                                 tax_types[k] = float(v) + float(amount)

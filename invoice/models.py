@@ -67,9 +67,11 @@ class InvoiceLine(models.Model):
         self.item_tax = 0 
         if self.id :
             for tax in self.taxableItems.all() :
-                self.item_tax += float(tax.amount or  0 ) 
-            self.total_taxes_fees = float(self.quantity) * float(self.item_tax)
-            self.total = (float(self.salesTotal) +  float( self.total_taxes_fees or 0 )) - total_daiscount
+                self.item_tax += round (float(tax.amount or  0 )  , 5)
+                print("item" ,  self.item_tax)
+            self.total_taxes_fees = round ((float(self.quantity) * float(self.item_tax)) , 5)
+            self.total = round (((float(self.salesTotal) +  float( self.item_tax or 0 )) - total_daiscount) , 5 )
+            print(self.total)
             self.netTotal = float(self.salesTotal) - float(total_daiscount)
         return super(InvoiceLine, self).save(*args, **kwargs)
 
@@ -161,7 +163,7 @@ def invoice_totals(sender ,instance , **kwargs):
         tax_totals= 0 
         
         for line in instance.invoiceLines.all():
-           
+            line.save()
 
             totalSalesAmount += float(line.salesTotal or 0)
             totalDiscountAmount += float(line.discount_amount or 0)
@@ -176,7 +178,7 @@ def invoice_totals(sender ,instance , **kwargs):
         instance.totalDiscountAmount =  round(float(totalDiscountAmount or 0 ) , 5 )
         instance.totalSalesAmount = round(float(totalSalesAmount) , 5)
         instance.netAmount = round ((float(totalSalesAmount or 0 ) -float(totalDiscountAmount or 0)) , 5)
-        instance.totalAmount = float( instance.netAmount or 0 ) + float(tax_totals or 0 )
+        instance.totalAmount = round((float( instance.netAmount or 0 ) + float(tax_totals or 0 )), 4 )
        
     except:print('not Done')
 
