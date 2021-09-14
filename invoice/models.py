@@ -132,7 +132,7 @@ class EInvoice (models.Model) :
     docstatus =models.CharField(max_length=500 , blank=True , null=True)
     errro_log =models.CharField(max_length=500 , blank=True , null=True)
     created_date = models.DateTimeField(auto_now_add= True , null =True , blank=True)
-    message_Serv = models.JSONField(null =True , blank =True   )
+    message_Serv = models.TextField(null =True , blank =True   )
 
 
     def save(self , *args , **kwargs):

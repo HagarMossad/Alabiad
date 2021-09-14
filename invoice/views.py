@@ -13,7 +13,7 @@ from tax.models import TaXCategory ,taxableItems ,TaxTotals
 from http.client import HTTPSConnection
 from base64 import b64encode, encode
 import ssl
-
+import subprocess
 from .column import create_request
 def invoice_list(request):
     invociesList =    EInvoice.objects.all().order_by('-id')
@@ -83,7 +83,7 @@ def edit_invocie(request, id):
     invocie = EInvoice.objects.get(id =id)
     stat = None
     if invocie.message_Serv :
-        stat_message =invocie.message_Serv.get('message')
+        stat_message =invocie.message_Serv
 
         stat_v = stat_message[2:-1]
         stat = stat_v.replace('null' , '""')
@@ -235,11 +235,52 @@ def post_to_auth(request , id ):
 				"Accept-Language" : "ar" ,
 				'Content-Type'    :'application/json' 
 				 }
+    if invoice.documentTypeVersion == "0.9"  :
+        print(invoice.documentTypeVersion )
+        c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
+        c.request('POST', '/api/v1.0/documentsubmissions' ,headers=headers , body=json.dumps(form) )
+        res = c.getresponse()
+        data = res.read()
+        return JsonResponse({'message' : str(data)})
+    if invoice.documentTypeVersion == "1.0"  :
+        try :
+          os.remove('C:/j/sFile.txt')
+        except:
+            pass
+        jsonfile = "C:/j/sFile.txt"
+        with open(jsonfile, 'a', encoding='utf-8') as outfile:
+            json.dump(input_json, outfile )
 
-    c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
-    c.request('POST', '/api/v1.0/documentsubmissions' ,headers=headers , body=json.dumps(form) )
-    res = c.getresponse()
-    data = res.read()
-    return JsonResponse({'message' : str(data)})
+        cmd = 'C:/j/EInvoicingSigner.exe'
+        result = subprocess.Popen([cmd ,' '], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        a,b = result.communicate()
+        print(a,b)
+        if a :
+
+            h = json.loads(a)
+            if h.get('submissionId') :
+                accepted_document = {"document_id" : internal_id  , "submissionId" :h.get('submissionId') }
+                # if h.get('submissionId') : 
+                #     main_data['submissionId'] =  h.get('submissionId')
+                # self.request.sendall(json.dumps(accepted_document).encode('utf-8'))
+                return JsonResponse({'message' : str(accepted_document)})
+
+            else :
+                try :
+                  rejected = h.get('rejectedDocuments')[0].get('error').get('details')[0]
+                  main_data['error_details'] =rejected or b
+                  return JsonResponse({'message' : str(main_data)})
+                  
+                  
+                except:
+                    main_data['error_details'] =b
+                    return JsonResponse({'message' : str(main_data)})
+
+                  
+        else :
+            main_data['error_details'] =str(b)
+            return JsonResponse({'message' : str(main_data)})
+
+
 
 

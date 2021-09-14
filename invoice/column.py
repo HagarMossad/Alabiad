@@ -1,5 +1,5 @@
 from payer.models import PayerAccount
-
+import subprocess
 import pandas as pd
 import json
 import requests
@@ -8,6 +8,7 @@ from tax.models import TaXCategory, taxableItems ,TaxTotals
 from http.client import HTTPSConnection
 from base64 import b64encode
 import ssl
+import os
 columns = ['Series',
 'Type',
 'Document Type',
@@ -152,12 +153,54 @@ def post_to_auth_upload(id):
 				'Content-Type'    :'application/json' 
 				 }
 
-    c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
-    c.request('POST', '/api/v1.0/documentsubmissions' ,headers=headers , body=json.dumps(form) )
-    res = c.getresponse()
-    data = res.read()
-    print(form)
-    return ({'message' : str(data)})
+    if invoice.documentTypeVersion == "0.9"  :
+        print(invoice.documentTypeVersion )
+        c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
+        c.request('POST', '/api/v1.0/documentsubmissions' ,headers=headers , body=json.dumps(form) )
+        res = c.getresponse()
+        data = res.read()
+        return ({'message' : str(data)})
+    if invoice.documentTypeVersion == "1.0"  :
+        main_data={}
+        try :
+          os.remove('C:/j/sFile.txt')
+        except:
+            pass
+        jsonfile = "C:/j/sFile.txt"
+        str_form = json.dumps(form.get('documents')[0])
+        print(" form" , str_form)
+        with open(jsonfile, 'a', encoding='utf-8') as outfile:
+            json.dump(form.get('documents')[0], outfile )
+
+        cmd = 'C:/j/EInvoicingSigner.exe'
+        result = subprocess.Popen([cmd ,' '], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        a,b = result.communicate()
+        print(a,b)
+        if a :
+
+            h = json.loads(a)
+            if h.get('submissionId') :
+                accepted_document = { "submissionId" :h.get('submissionId') }
+                # if h.get('submissionId') : 
+                #     main_data['submissionId'] =  h.get('submissionId')
+                # self.request.sendall(json.dumps(accepted_document).encode('utf-8'))
+                return ({'message' : str(accepted_document)})
+
+            else :
+                try :
+                  rejected = h.get('rejectedDocuments')[0].get('error').get('details')[0]
+                  main_data['error_details'] =rejected or b
+                  return ({'message' : str(main_data)})
+                  
+                  
+                except:
+                    main_data['error_details'] =b
+                    return ({'message' : str(main_data)})
+
+                  
+        else :
+            main_data['error_details'] =str(b)
+            return ({'message' : str(main_data)})
 
 def create_request(uploader_id , pth):
     data = pd.read_excel( pth  ,sheet_name = 0)
