@@ -56,16 +56,19 @@ def home(request):
     c.request('GET', f'/api/v1.0/documents/recent?pageNo={number}&pageSize=20' ,headers=headers  )
     res = c.getresponse()
     data = res.read()
-    ara = json.loads(data)
-    print(ara)
-    result = ara.get('result')
-    metadata = ara.get('metadata')
-    available_pages = metadata.get('totalPages')
-    pages = [ i for i in range(1 , int(available_pages) )]
-    available_pages = metadata.get('totalCount')
-    content = {
-        "token": result,
-        "pages" :pages , 
-        "page_number" : number,
-    }
-    return render(request ,page , content)
+    try :
+        ara = json.loads(data)
+        result = ara.get('result')
+        metadata = ara.get('metadata')
+        available_pages = metadata.get('totalPages')
+        pages = [ i for i in range(1 , int(available_pages) )]
+        availables_pages = metadata.get('totalCount')
+        content = {
+            "token": result,
+            "pages" :pages , 
+            "page_number" : number,
+            "total_count" : availables_pages
+        }
+        return render(request ,page , content)
+    except Exception as e :
+        return render(request , "error.html" , {"message" : str(e)})

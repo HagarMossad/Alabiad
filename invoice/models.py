@@ -82,7 +82,7 @@ class InvoiceLine(models.Model):
 class EInvoice (models.Model) :
     #issuer info
     payer_account = models.ForeignKey(PayerAccount , on_delete=models.CASCADE , null=True , blank=True)
-    uploader_id  =models.CharField(max_length=250,choices=AccountType ,blank=True ,null=True)
+    uploader_id  =models.CharField(max_length=250 ,blank=True ,null=True)
     issuer_type =models.CharField(max_length=250,choices=AccountType ,blank=True ,null=True)
     issuer_id=models.CharField(max_length=250 ,blank=True ,null=True)
     issuer_name=models.CharField(max_length=250 ,blank=True ,null=True)

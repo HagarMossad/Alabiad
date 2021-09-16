@@ -278,7 +278,7 @@ def e_invoice_form(data):
         
         ic_invoice = EInvoice()
         issuer                                   = invoice.get('issuer')
-        # ic_invoice.uploader_id                   = str(invoice.get('uploader_id'))
+        ic_invoice.uploader_id                   = str(invoice.get('uploader_id'))
         ic_invoice.issuer_type                   = issuer.get('issuer_type')
         ic_invoice.issuer_id                     = issuer.get('issuer_id')
         ic_invoice.issuer_name                   = issuer.get('issuer_name')

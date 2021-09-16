@@ -15,9 +15,17 @@ from base64 import b64encode, encode
 import ssl
 import subprocess
 from .column import create_request
+from django.db.models import Q
+
+
 def invoice_list(request):
     invociesList =    EInvoice.objects.all().order_by('-id')
     fill_uploauded = InoiveFile.objects.all().order_by('-id')
+
+    if request.GET.get("uplaoder_id") :
+        invociesList =    EInvoice.objects.filter(uploader_id =request.GET.get("uplaoder_id") ).order_by('-id')
+    if request.GET.get("search"):
+        invociesList = invociesList.filter(Q(internalId__icontains=request.GET.get("search")  ) | Q(receiver_name__icontains=request.GET.get("search")))
     paginator = Paginator(invociesList , 20)
     page_number = request.GET.get('page')
     invocies = paginator.get_page(page_number)
@@ -25,7 +33,9 @@ def invoice_list(request):
     fl_select = [{"id" :i.id , "value" : i.status } for i in fill_uploauded ] 
     content = {
         "invoices" : invocies , 
-        "fl_select" : fl_select
+        "fl_select" : fl_select ,
+        "uploader_id" : InoiveFile.objects.filter(id = request.GET.get("uplaoder_id")).first() if request.GET.get("uplaoder_id") else  False,
+        "serach_value" : request.GET.get("search") if request.GET.get("search") else ""
     }
     return render(request ,page , content ) 
 

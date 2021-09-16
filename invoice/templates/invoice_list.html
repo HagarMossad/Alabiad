@@ -32,23 +32,28 @@
             <a  class="btn btn-primary" href="{% url 'create_inoice'%}"  id ="createnew">  Create New </a> -->
         
     </div>
-  
+  <form>
     <div class="row">
 
-        <div class="col-md-4 ">
-            <input  class="form-control" placeholder="internal code" />
+        <div class="col-md-3 ">
+            <input  class="form-control" placeholder="internal code" name="search"  {% if serach_value %} value="{{ serach_value}}" {% endif %}/>
         </div>
-        <div class="col-md-4">
+        
+        <div class="col-md-3">
           
-            <select class="form-control" placeholder="sheet Title " > 
-                <option> Select Upload Sheet </option>
+            <select class="form-control" placeholder="sheet Title " name = "uplaoder_id" > 
+                {% if uploader_id %} <option value="{{ uploader_id.id }}" >  {{ uploader_id.status }}</option>{% endif %}
+                <option>  </option> 
                 {% for sheet in fl_select %}
                 <option value="{{ sheet.id }}">  {{ sheet.value }}</option>
                 {% endfor %}
             </select>
         </div>
+<div class="col-md-3">
+    <button type='submit'> search </button>
+</div>
     
-        <div class="col-md-4" align='right'>
+        <div class="col-md-3" align='right'>
             
             <a  href="#myModal" class="btn btn-success"   id='myInput' data-toggle="modal" > Upload Sheet </a>
             <!-- <a href="#myModal" role="button" class="btn btn-lg btn-primary" data-toggle="modal">Launch Demo Modal</a> -->
@@ -60,17 +65,19 @@
          
           
     </div>
+</form>
     <br> <hr>
 
 <table class="table table-bordered"  >
-    <thead  class="thead-dark">
+    <thead  class="thead">
         
     <tr>
         <th class="col-xs-1" data-field="state" data-checkbox="true"></th>
         <th class="col-xs-1"  >Inernal id</th>
+        <th class="col-xs-6"  >Customer Name  </th>
         <th class="col-xs-1" >Totla Amount </th>
-        <th class="col-xs-6" >Submmition Status </th>
-        <th class="col-xs-6"  >Document Status </th>
+        <th class="col-xs-6" >Sales Total </th>
+        
         <th class="col-xs-6"  >Uploded Date  </th>
     </tr>
     </thead>
@@ -80,9 +87,10 @@
         <tr>
             <td> <input type="checkbox" aria-label="Checkbox for following text input"></td>
             <td><a href="{% url 'edit_invocie' invoice.id %}">  {{ invoice.internalId }} </a> </td>
-            <td> {{ invoice.netAmount }} </td>
-            <td> {{ invoice.submissionId }}</td>
-            <td> {{ invoice.docstatus }}</td>
+               <td> {{ invoice.receiver_name }}</td>
+            <td> {{ invoice.totalAmount }} </td>
+            <td> {{ invoice.totalSalesAmount }}</td>
+         
             <td> {{ invoice.created_date }}</td>
         </tr>
 
