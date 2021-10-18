@@ -7,9 +7,41 @@ from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
-from .models import Receiver ,AccountType
+from .models import Receiver ,AccountType ,TaxableTypes,TaxSubtypes
+# Create your models here.
+from pathlib import Path
+import json
+BASE_DIR = Path(__file__).resolve().parent.parent
 @login_required(login_url='login')
 def home (request) :
+
+    tax_path = BASE_DIR / 'e_invoice/TaxTypes.json'
+    tax_subtype_path = BASE_DIR / 'e_invoice/TaxSubtypes.json'
+    taxtype_json = open(tax_path , encoding= 'utf-8')
+    tax_subtype_json = open(tax_subtype_path, encoding= 'utf-8')
+    taxtype_data =json.load(taxtype_json)
+    tax_subtype_data = json.load(tax_subtype_json)
+    init_data = TaxableTypes.objects.all()
+    init_sub_data = TaxSubtypes.objects.all()
+    if len(init_data) == 0 :
+        print("Init Types For first Time ")
+        for  i in taxtype_data :
+            a = TaxableTypes(
+                Code = i.get('Code') , 
+                Desc_en= i.get('Desc_en'),
+                Desc_ar = i.get("Desc_ar")
+            )
+            a.save()
+    if len(init_sub_data) == 0 :
+        print("Init Types For first Time ")
+        for  i in tax_subtype_data :
+            a = TaxSubtypes(
+                Code = i.get('Code') , 
+                Desc_en= i.get('Desc_en'),
+                Desc_ar = i.get("Desc_ar"),
+                TaxtypeReference = i.get('TaxtypeReference')
+            )
+            a.save()
     page = 'home.html'
     return render (request , page)
 

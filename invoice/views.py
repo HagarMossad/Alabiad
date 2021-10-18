@@ -112,7 +112,9 @@ def uplaod_sheet(request):
             status = request.POST.get('sheettitle') ,
             sheet =request.FILES['myfile'] )
         a.save()
-        create_request(a.id , a.sheet.path)
+        success = create_request(a.id , a.sheet.path)
+        if success.get('error') :
+            return render (request , "error.html" , {'message': success.get('error') })
     invociesList =    EInvoice.objects.all().order_by('-id')
     fill_uploauded = InoiveFile.objects.all().order_by('-id')
     paginator = Paginator(invociesList , 20)
@@ -251,6 +253,7 @@ def post_to_auth(request , id ):
         c.request('POST', '/api/v1.0/documentsubmissions' ,headers=headers , body=json.dumps(form) )
         res = c.getresponse()
         data = res.read()
+        invoice.message_Serv = str(data)
         return JsonResponse({'message' : str(data)})
     if invoice.documentTypeVersion == "1.0"  :
         try :

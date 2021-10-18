@@ -25,7 +25,11 @@
                       <form  method='post' action="{% url 'creat_tax' %}">
                           {% csrf_token %}
                           <label> Tax Name </label>
-                          <input type = 'text' class="form-control" name = 'tax_name'>
+                          <input type = 'text' class="form-control" name = 'tax_name' required>
+                          <label> Valid From </label>
+                          <input type = 'Date' class="form-control" name = 'validfrom' required>
+                          <label> Valid To </label>
+                          <input type = 'Date' class="form-control" name = 'validto' required>
                      
                     </div>
                     <div class="modal-footer">

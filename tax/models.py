@@ -18,9 +18,15 @@ class taxableItems(models.Model):
     parent_id = models.CharField(max_length=250 , null=True , blank=True)
     parent_type = models.CharField(max_length=250 , null=True , blank=True)
 
-
+TAX_STAUS = [
+    ('Active' , "Active"),
+    ('Not Active' , "Not Active")
+]
 class TaXCategory(models.Model):
     name = models.CharField(max_length= 250 ,blank=True , null=True )
+    validFrom = models.DateField(auto_now= False , blank=True , null=True)
+    validTo   = models.DateField(auto_now= False , blank=True , null=True)
+    status = models.CharField(max_length=250 , default="Active" , choices=TAX_STAUS )
     tax_table = models.ManyToManyField(taxableItems ,blank=True , null=True)
     def __str__(self):
         return str(self.name)

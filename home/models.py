@@ -70,3 +70,23 @@ class Receiver(models.Model) :
     receiver_address_street=models.CharField(max_length=250 , null=True , blank=True)
     receiver_address_buildingNumber=models.CharField(max_length=250 , null=True , blank=True)
 
+class TaxableTypes(models.Model):
+    Code     = models.CharField(max_length=250 , null =True , blank=True)
+    Desc_en  = models.CharField(max_length=250 , null =True , blank=True)
+    Desc_ar  = models.CharField(max_length=250 , null =True , blank=True)
+
+    def __str__(self):
+        return self.Desc_en
+
+
+
+class TaxSubtypes(models.Model):
+    Code              = models.CharField(max_length=250 , null =True , blank=True)
+    Desc_en           = models.CharField(max_length=250 , null =True , blank=True)
+    Desc_ar           = models.CharField(max_length=250 , null =True , blank=True)
+    TaxtypeReference  = models.CharField(max_length=250 , null =True , blank=True)
+    def __str__(self):
+        return self.Desc_en
+
+
+

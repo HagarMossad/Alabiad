@@ -265,7 +265,8 @@ def create_request(uploader_id , pth):
     
        r_str = str(inv).replace("'" , '"') 
        r_str = str(r_str).replace("nan" , ' " " ')
-       e_invoice_form( inv)
+       status = e_invoice_form( inv)
+       return status
        
 
     # return({"success" :"succes"})
@@ -314,6 +315,8 @@ def e_invoice_form(data):
             taxes = line.get('Item Tax (Item)')
             # # taxes_list = [{tax.}]
             tax_cat =  TaXCategory.objects.filter(name =taxes).first()
+            if not tax_cat :
+                return {'error':"Not valid tax catigory"}
             # unitValue = line.get('unitValue')
             ic_invoice.invoiceLines.create(
                 
