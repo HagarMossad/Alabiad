@@ -13,6 +13,8 @@ method= '/connect/token'
 
 def get_token():
     account  = PayerAccount.objects.all().first()
+    if not account :
+         return None
     key =account.user_key 
     secret = account.token_key
     grant_type = 'client_credentials'
@@ -40,6 +42,8 @@ def home(request):
     page = 'last_documents.html'
     account  = PayerAccount.objects.all().first()
     token = get_token()
+    if not token :
+        return render(request , "error.html" , {"message" : "No Payer Account Found"})
     headers = {
 				"Authorization"   : 'Bearer %s'%token,
 				"Accept"          : "application/json" ,
