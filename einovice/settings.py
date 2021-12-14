@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'item', 
     'payer',
     'tax' ,
-    'reports'
+    'reports',
+    'next_apis'
 ]
 
 MIDDLEWARE = [

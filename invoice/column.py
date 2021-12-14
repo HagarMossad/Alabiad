@@ -152,7 +152,6 @@ def post_to_auth_upload(id):
 				"Accept-Language" : "ar" ,
 				'Content-Type'    :'application/json' 
 				 }
-
     if invoice.documentTypeVersion == "0.9"  :
         print(invoice.documentTypeVersion )
         c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
@@ -372,3 +371,108 @@ def e_invoice_form(data):
 
 
         return ({"creates":"created"})
+
+############## create invoice fom erpnext ####################
+from payer.models import PayerAccount
+def create_e_invoice(data):
+    invoice = data
+
+    ic_invoice = EInvoice()
+    # issuer = invoice.get('issuer')
+    # ic_invoice.uploader_id = str(invoice.get('uploader_id'))
+    issuer = PayerAccount.objects.all().first()
+    print("issuerrr",issuer)
+    ic_invoice.issuer_type = issuer.issuer_type
+    ic_invoice.issuer_id = issuer.issuer_id
+    ic_invoice.issuer_name = issuer.issuer_name
+    # address = issuer.get('address')
+    ic_invoice.issuer_address_branchId =issuer.issuer_address_branchId
+    ic_invoice.issuer_address_country = issuer.issuer_address_country
+    ic_invoice.issuer_address_governate = issuer.issuer_address_governate
+    ic_invoice.issuer_address_regionCity = issuer.issuer_address_regionCity
+    ic_invoice.issuer_address_street = issuer.issuer_address_street
+    ic_invoice.issuer_address_buildingNumber = issuer.issuer_address_buildingNumber
+    ic_invoice.receiver_type = invoice.get('receiver_type')
+    ic_invoice.receiver_id = str(invoice.get('receiverid')).split('.')[0]
+    ic_invoice.receiver_name = invoice.get('receivername') or ''
+    # receiver_address                           = invoice.get('receiver_address')
+    ic_invoice.receiver_address_branchId = str(invoice.get('branchid')).split('.')[0]
+    ic_invoice.receiver_address_country = invoice.get('country_code')
+    ic_invoice.receiver_address_governate = invoice.get('governate')
+    ic_invoice.receiver_address_regionCity = invoice.get('regioncity')
+    ic_invoice.receiver_address_street = invoice.get('street')
+    ic_invoice.receiver_address_buildingNumber = str(invoice.get('buildingnumber')).split('.')[0]
+
+    # set document info
+    ic_invoice.datetimestr = invoice.get('datetime_issued')
+    ic_invoice.dateTimeIssued=invoice.get('datetime_issued')
+    ic_invoice.documentType = invoice.get('document_type')
+    ic_invoice.documentTypeVersion = str(issuer.documentTypeVersion)
+    ic_invoice.taxpayerActivityCode = issuer.activty_number
+    ic_invoice.internalId = str(invoice.get('internalid')).split('.')[0]
+    ic_invoice.save()
+    # set Invoice Items
+    invoiceLines =invoice.get('items') #json.loads()
+    for line in invoiceLines:
+        taxes = line.get('item_tax_template')
+        # # taxes_list = [{tax.}]
+        print("line.get('item_tax_template')",line.get('item_tax_template'))
+        print("taxes",taxes)
+        tax_cat = TaXCategory.objects.filter(name=taxes).first()
+        print("taxxxxx",tax_cat)
+        if not tax_cat:
+            print("asssssssssss")
+            pass
+            # return {'error': "Not valid tax catigory"}
+        # unitValue = line.get('unitValue')
+        ic_invoice.invoiceLines.create(
+
+            description=line.get('description'),
+            itemType=line.get('item_type'),
+            itemCode=line.get('item_code'),
+            unitType=line.get('uom'),
+            quantity=float(line.get('qty')),
+            unitValue_currencySold='EGP',
+            unitValue_amountEGP=round(float(line.get('rate') or 0), 4),
+            parent_type="EInvoice",
+            parent_id=ic_invoice.id,
+            tax_cat=tax_cat,
+            discount_amount=float(line.get('discount_amount'))
+
+        )
+        ic_invoice.save()
+    tax_types = {}
+    for line in ic_invoice.invoiceLines.all():
+
+        for tax in line.tax_cat.tax_table.all():
+            rate = tax.rate
+            amount = tax.amount
+            if tax.rate and tax.rate > 0:
+                amount = ((float(rate) / 100) * (float(line.unitValue_amountEGP or 0))) - float(
+                    line.discount_amount or 0)
+
+            amount = amount * float(line.quantity or 0)
+            print(amount)
+            in_tax = taxableItems(taxType=tax.taxType, rate=tax.rate,
+                                  subType=tax.subType, amount=round(amount, 4), parent_id=line.id,
+                                  parent_type='invoiceLines')
+            for k, v in tax_types.items():
+                if k == tax.taxType:
+                    tax_types[k] = float(v) + float(amount)
+            if tax.taxType not in tax_types.keys():
+                tax_types[tax.taxType] = float(amount)
+
+            in_tax.save()
+            line.taxableItems.add(in_tax)
+            line.save()
+    for k, v in tax_types.items():
+        a = TaxTotals(taxType=k, amount=v, parent_id=ic_invoice.id, parent_type="EInvoice")
+        a.save()
+        ic_invoice.taxTotals.add(a)
+        ic_invoice.save()
+    print("ic invvv",ic_invoice)
+    response = post_to_auth_upload(ic_invoice.id)
+    ic_invoice.message_Serv = response
+    ic_invoice.save()
+
+    return ({"creates": "created"})

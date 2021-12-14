@@ -38,4 +38,7 @@ qexpress/**/migrations/
 
 **/__pycache__
 
+## ignore uploader files ##
+/media/uploader
+
 
