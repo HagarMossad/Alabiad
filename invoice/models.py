@@ -54,7 +54,7 @@ class InvoiceLine(models.Model):
     total_taxes_fees =  models.DecimalField(decimal_places=5 , max_digits= 1000 , blank=True , null=True )
     parent_id = models.CharField(max_length=250 , null=True , blank=True)
     parent_type = models.CharField(max_length=250 , null=True , blank=True)
-
+    rd_tax = models.DecimalField(decimal_places=5, max_digits=1000, blank=True, null=True)
     def save(self, *args, **kwargs):
         if self.item :
             self.description = self.item.description
@@ -69,6 +69,7 @@ class InvoiceLine(models.Model):
             for tax in self.taxableItems.all() :
                 self.item_tax += round (float(tax.amount or  0 )  , 5)
                 print("item" ,  self.item_tax)
+
             self.total_taxes_fees = round ((float(self.quantity) * float(self.item_tax)) , 5)
             self.total = round (((float(self.salesTotal) +  float( self.item_tax or 0 )) - total_daiscount) , 5 )
             print(self.total)
@@ -172,6 +173,7 @@ def invoice_totals(sender ,instance , **kwargs):
         if taxes_al :
             for i in taxes_al :
                 tax_totals += float(i.amount)
+                # i.amount = abs(i.amount)
 
 
       

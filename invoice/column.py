@@ -23,7 +23,8 @@ columns = ['Series',
 'Receiver Street',
 'Receiver Building Number',
 'Date TimeIssued',
-'Internal Id']
+'Internal Id',
+           ]
 
 items_cols = [
                 'Code (Item)',
@@ -33,7 +34,8 @@ items_cols = [
                 'QTY (Item)',
                 'Rate (Item)',
                 'Discount (Item)',
-                'Item Tax (Item)']
+                'Item Tax (Item)',
+                'Tax Amount']
 
 
 
@@ -98,7 +100,7 @@ def post_to_auth_upload(id):
 		              'salesTotal'      :round(float(item.salesTotal or 0 ) ,5),
 		              'total'           :round( float(item.total or 0) , 5) ,
 		              'valueDifference' :float(item.valueDifference or 0) , 
-		              'totalTaxableFees':0 ,#float(item.total_taxable_fees or 0),
+		              'totalTaxableFees': 0 ,#float(item.total_taxable_fees or 0),
 		              'netTotal'        :round(float(item.netTotal or 0) , 5 )  ,
 		              'itemsDiscount'   : 0, #round((item.item_discount * item.quantity) , 5),
 		              'unitValue'       :   {
@@ -113,9 +115,9 @@ def post_to_auth_upload(id):
 		                                    },
 
                         "taxableItems" :[ {"taxType":tax_i.taxType ,
-                                           "amount": round(float(tax_i.amount or 0 ) , 5) , 
+                                           "amount": abs(round(float(tax_i.amount or 0 ) , 5)) ,
                                             "subType" : tax_i.subType ,
-                                            "rate" :round( float ( tax_i.rate or 0) , 5 )} 
+                                            "rate" :abs(round( float ( tax_i.rate or 0) , 5 ))}
                                              for tax_i in  item.taxableItems.all()]
                      
 		             
@@ -261,7 +263,7 @@ def create_request(uploader_id , pth):
        inv['issuer'] = issr
        inv['taxpayerActivityCode'] = str(issuer.activty_number)
        inv['uploader_id'] = str(uploader_id)
-    
+       inv['rd_tax'] = ""
        r_str = str(inv).replace("'" , '"') 
        r_str = str(r_str).replace("nan" , ' " " ')
        status = e_invoice_form( inv)
@@ -299,7 +301,7 @@ def e_invoice_form(data):
         ic_invoice.receiver_address_regionCity     = invoice.get('Receiver Region City')
         ic_invoice.receiver_address_street         = invoice.get('Receiver Street')
         ic_invoice.receiver_address_buildingNumber = str(invoice.get('Receiver Building Number')).split('.')[0]
-            
+        ic_invoice.rd_tax                          = invoice.get('rd_tax')
 
         # set document info 
         ic_invoice.datetimestr  = invoice.get('Date TimeIssued')
@@ -315,7 +317,7 @@ def e_invoice_form(data):
             # # taxes_list = [{tax.}]
             tax_cat =  TaXCategory.objects.filter(name =taxes).first()
             if not tax_cat :
-                return {'error':"Not valid tax catigory"}
+                return {'error':"Not valid tax Category"}
             # unitValue = line.get('unitValue')
             ic_invoice.invoiceLines.create(
                 
@@ -329,8 +331,8 @@ def e_invoice_form(data):
                     parent_type = "EInvoice" ,
                     parent_id= ic_invoice.id,
                     tax_cat = tax_cat ,
-                    discount_amount =float( line.get('Discount (Item)'))
-                    
+                    discount_amount =float( line.get('Discount (Item)')),
+                    rd_tax   = float(line.get('Tax Amount'))
 
 
 
@@ -344,9 +346,11 @@ def e_invoice_form(data):
                     amount = tax.amount
                     if tax.rate and tax.rate > 0  :
                         amount = ((float(rate) / 100 ) * (float(line.unitValue_amountEGP or 0  ) )) - float(line.discount_amount or 0 )
-                          
-                    amount=  amount * float(line.quantity or 0)
-                    print(amount)
+                    elif tax.subType == "RD02" or tax.subType == "RD04":
+                        amount = line.rd_tax
+                        print("rdddddddd",amount)
+                    amount=  float(amount or 0) * float(line.quantity or 0)
+                    print("amount ",amount)
                     in_tax = taxableItems(taxType = tax.taxType , rate = tax.rate ,
                     subType = tax.subType , amount = round(amount , 4)  , parent_id = line.id , parent_type = 'invoiceLines')
                     for k , v in tax_types.items() :
@@ -359,7 +363,7 @@ def e_invoice_form(data):
                     line.taxableItems.add(in_tax)
                     line.save()
         for k,v in tax_types.items() :
-            a =TaxTotals(taxType = k , amount = v , parent_id =ic_invoice.id , parent_type ="EInvoice" )
+            a =TaxTotals(taxType = k , amount = v , parent_id = ic_invoice.id , parent_type = "EInvoice" )
             a.save()
             ic_invoice.taxTotals.add(a)
             ic_invoice.save()
