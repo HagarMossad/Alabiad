@@ -345,7 +345,8 @@ def e_invoice_form(data):
                     rate =tax.rate 
                     amount = tax.amount
                     if tax.rate and tax.rate != 0  :
-                        amount = ((float(rate) / 100 ) * (float(line.unitValue_amountEGP or 0  ) )) - float(line.discount_amount or 0 )
+                        #amount = ((float(rate) / 100 ) * (float(line.unitValue_amountEGP or 0  ) )) - float(line.discount_amount or 0 )
+                        amount = (float(line.unitValue_amountEGP or 0) - float(line.discount_amount or 0 )) * (float(rate) / 100 )
                     elif tax.subType == "RD02" or tax.subType == "RD04":
                         amount = float(line.rd_tax or 0)
 
