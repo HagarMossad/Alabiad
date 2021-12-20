@@ -133,7 +133,7 @@ def post_to_auth_upload(id):
         "taxTotals"                : [
             {
                 "taxType" : tax_e.taxType ,
-                "amount" : round( float (tax_e.amount or 0))
+                "amount" : abs(round( float (tax_e.amount or 0)))
             }
         for tax_e in  
         invoice.taxTotals.all()],#invoice.taxTotals.all(),
@@ -344,13 +344,12 @@ def e_invoice_form(data):
                 for tax in  line.tax_cat.tax_table.all() :
                     rate =tax.rate 
                     amount = tax.amount
-                    if tax.rate and tax.rate > 0  :
+                    if tax.rate and tax.rate != 0  :
                         amount = ((float(rate) / 100 ) * (float(line.unitValue_amountEGP or 0  ) )) - float(line.discount_amount or 0 )
                     elif tax.subType == "RD02" or tax.subType == "RD04":
                         amount = line.rd_tax
-                        print("rdddddddd",amount)
+
                     amount=  float(amount or 0) * float(line.quantity or 0)
-                    print("amount ",amount)
                     in_tax = taxableItems(taxType = tax.taxType , rate = tax.rate ,
                     subType = tax.subType , amount = round(amount , 4)  , parent_id = line.id , parent_type = 'invoiceLines')
                     for k , v in tax_types.items() :
