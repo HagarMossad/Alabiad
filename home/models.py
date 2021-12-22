@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 import os 
 import json
+
 from payer.models import PayerAccount
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,3 +91,20 @@ class TaxSubtypes(models.Model):
 
 
 
+class ReceiverFile(models.Model) :
+    status = models.CharField(max_length=250 , null=True , blank=True)
+    uplaod_time = models.DateTimeField(auto_now_add= True)
+    sheet = models.FileField(upload_to = 'uploader')
+
+
+
+
+class ErrorLog(models.Model):
+    message = models.TextField(max_length= 1000 , blank=True , null=True)
+    refrence = models.CharField(max_length= 250 , null= True , blank=True)
+    date = models.DateTimeField(auto_now= True, auto_created=True ,blank=True , null= True)
+    nowdate = models.DateTimeField(auto_now= True, auto_created=True ,blank=True , null= True)
+
+
+    class Meta :
+        ordering = ['nowdate']

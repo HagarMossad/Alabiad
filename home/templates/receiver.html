@@ -81,7 +81,9 @@
               
              
         </div>
+        {% if request.user.is_superuser %}
         <button type="submit" class="btn btn-primary" > Save</button>
+        {% endif %}
     </form>
 </div>
 

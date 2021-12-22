@@ -133,7 +133,7 @@ def post_to_auth_upload(id):
         "taxTotals"                : [
             {
                 "taxType" : tax_e.taxType ,
-                "amount" : abs(round( float (tax_e.amount or 0)))
+                "amount" : abs(round( float (tax_e.amount or 0),4))
             }
         for tax_e in  
         invoice.taxTotals.all()],#invoice.taxTotals.all(),

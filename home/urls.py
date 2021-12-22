@@ -18,11 +18,13 @@ from django.urls import path
 from .views import (home , user_login , logout_view ,
                     creat_receiver, register_view ,
                     user_list ,delete_user ,update_user ,
-                    reciever_list ,delete_receiver , edit_receiver
+                    reciever_list ,delete_receiver , edit_receiver ,import_reciever,
+                    errolog_list
                     )
 urlpatterns = [
     path('' , home , name='home') ,
     path ('login/' , user_login , name ='login') ,
+    path ('import_reciever/' , import_reciever , name ='import_reciever') ,
     path('logout/' , logout_view , name ='logout' ) ,
     path('create-user' ,  register_view ,name= 'creat-user') ,
     path('user_list' ,  user_list ,name= 'user_list'),
@@ -30,7 +32,8 @@ urlpatterns = [
     path('update_user/<id>' ,  update_user ,name= 'update_user') ,
     path('reciever_list' ,  reciever_list ,name= 'reciever_list') ,
     path('creat_receiver' ,  creat_receiver ,name= 'creat_receiver') ,
-     path('delete_receiver/<id>' ,  delete_receiver ,name= 'delete_receiver') ,
-     path('edit_receiver/<id>' ,  edit_receiver ,name= 'edit_receiver') ,
+    path('delete_receiver/<id>' ,  delete_receiver ,name= 'delete_receiver') ,
+    path('edit_receiver/<id>' ,  edit_receiver ,name= 'edit_receiver') ,
+    path ('errolog_list/' , errolog_list , name ='errolog_list') ,
 
 ]
