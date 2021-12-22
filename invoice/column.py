@@ -219,7 +219,7 @@ def create_request(uploader_id , pth):
             dict_data = {}
             for col_name in columns :
                 try :
-                     dict_data[col_name] = data[col_name].iloc[id]
+                     dict_data[col_name] = data[col_name].iloc[id] if data[col_name].iloc[id] != 'nan' else " "
                 except:
                     return ({"erro" : col_name +'not found'})
             for item in items_cols :
@@ -240,7 +240,7 @@ def create_request(uploader_id , pth):
 
     issuer = PayerAccount.objects.all().first()
     if not issuer :
-            return" error"
+            return ({"error " : "No Issuer Account Found !"})
    
     issr    = {                              
             "issuer_type"                 :  issuer.issuer_type,
@@ -267,10 +267,10 @@ def create_request(uploader_id , pth):
        r_str = str(inv).replace("'" , '"') 
        r_str = str(r_str).replace("nan" , ' " " ')
        status = e_invoice_form( inv)
-       return status
+    
        
 
-    # return({"success" :"succes"})
+    return({"success" :"succes"})
 
 
 
