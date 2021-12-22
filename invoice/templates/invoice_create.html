@@ -150,9 +150,15 @@
                       </div>
                       </div>
           <div class="row">
+              <div class="col-12">
+                  <h5>Taxes</h5>
+              </div>
+          </div>
+          <div class="row">
+
               {% for t in taxes %}
                    <div class="col-md-4">
-                          <label> {{ t.taxType }} </label>
+                          <label> {{ t.tax_link.Desc_ar }} </label>
                           <input type="text"  required class="form-control" value="{{ t.amount }}">
                       </div>
               {% endfor %}
