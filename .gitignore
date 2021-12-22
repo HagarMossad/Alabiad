@@ -40,5 +40,5 @@ qexpress/**/migrations/
 
 ## ignore uploader files ##
 /media/uploader
-
+/media/uploader/*
 
