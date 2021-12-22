@@ -12,6 +12,7 @@ from .models import Receiver ,AccountType ,TaxableTypes,TaxSubtypes , ReceiverFi
 # Create your models here.
 from pathlib import Path
 import json
+from django.db.models import Q
 BASE_DIR = Path(__file__).resolve().parent.parent
 @login_required(login_url='login')
 def home (request) :
@@ -189,11 +190,14 @@ def import_reciever(request) :
 def reciever_list(request):
     page = 'receiver_list.html'
     recievers = Receiver.objects.all()
+    if request.GET.get("search"):
+        recievers = Receiver.objects.filter(Q(receiver_id__icontains=request.GET.get("search")  ) | Q(receiver_name__icontains=request.GET.get("search")))
     paginator = Paginator(recievers , 20)
     page_number = request.GET.get('page')
     invocies = paginator.get_page(page_number)
     content={
-        'recievers' :invocies
+        'recievers' :invocies ,
+        'search' : request.GET.get("search")
     }
     return render(request , page , content)
 
