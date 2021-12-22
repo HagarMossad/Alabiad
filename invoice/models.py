@@ -10,7 +10,7 @@ from django.db.models.signals import pre_save ,post_save
 from django.db.models import Sum
 from django.dispatch import receiver
 from item.models import Item
-#
+
 class InoiveFile(models.Model) :
 
     status = models.CharField(max_length=250 , null=True , blank=True)
