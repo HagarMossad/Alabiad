@@ -46,7 +46,9 @@
       <a class="btn btn-success" data-toggle="collapse" href="#status" role="button" aria-expanded="false" aria-controls="collapseExample">
        Invocie Status 
        </a>
-
+        <a class="btn btn-danger" data-toggle="collapse" href="#items" role="button" aria-expanded="false" aria-controls="collapseExample">
+        Items
+       </a>
       {% endif %}
     <!-- <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="True" aria-controls="collapseExample">
       Main Section 
@@ -147,6 +149,14 @@
                            {% if invoice  %} value="{{ invoice.internalId }}" {% endif %}>
                       </div>
                       </div>
+          <div class="row">
+              {% for t in taxes %}
+                   <div class="col-md-4">
+                          <label> {{ t.taxType }} </label>
+                          <input type="text"  required class="form-control" value="{{ t.amount }}">
+                      </div>
+              {% endfor %}
+          </div>
                   
 
           </form>
@@ -228,6 +238,35 @@
             
           </form>
         </div>
+    </div>
+    <div class="collapse" id="items">
+        <table class="table table-bordered"  >
+    <thead  class="thead">
+
+    <tr>
+        <th class="col-xs-1"  >Item Name</th>
+        <th class="col-xs-6"  >QTY  </th>
+        <th class="col-xs-1" >Price </th>
+         <th class="col-xs-1" >Tax</th>
+        <th class="col-xs-6" >Total </th>
+
+    </tr>
+    </thead>
+    <tbody>
+
+   {% for item in items %}
+        <tr>
+            <td>{{ item.description }}</td>
+               <td> {{ item.quantity }}</td>
+            <td> {{ item.unitValue_amountEGP }} </td>
+            <td> {{ item.total_taxes_fees }} </td>
+            <td> {{ item.total }}</td>
+
+        </tr>
+
+   {% endfor %}
+    </tbody>
+</table>
     </div>
 </div>
 {% endblock %}

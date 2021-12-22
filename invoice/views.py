@@ -138,6 +138,8 @@ def edit_invocie(request, id):
     receivers = [{"id" : i.id , "name" : i.receiver_name  } for i in receiver ]
     issuers = [{"id" : i.id , "name" : i.issuer_name  } for i in issuer ]
     invocie = EInvoice.objects.get(id =id)
+    taxes  = invocie.taxTotals.all()
+    items = invocie.invoiceLines.all()
     stat = None
     if invocie.message_Serv :
         stat_message =invocie.message_Serv
@@ -149,7 +151,9 @@ def edit_invocie(request, id):
         "receivers" :receivers,
         "issuers":issuers ,
         "invoice" : invocie ,
-        "stat" :stat
+        "stat" :stat,
+        "taxes":taxes,
+        "items":items
 
     }
     return render(request , page ,content)
