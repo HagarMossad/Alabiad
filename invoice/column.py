@@ -368,6 +368,11 @@ def e_invoice_form(data):
             ic_invoice.taxTotals.add(a)
             ic_invoice.save()
         response = post_to_auth_upload(ic_invoice.id)
+        try:
+            my_json= json.loads(response.get("message")[2:len(response.get("message")) -1])
+            ic_invoice.submissionId = my_json.get("submissionId") if my_json else None
+        except:
+            pass
         ic_invoice.message_Serv = response
         ic_invoice.save()
 

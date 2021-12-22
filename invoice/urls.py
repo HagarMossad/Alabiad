@@ -15,11 +15,12 @@ Including another URLconf
 """
 
 from django.urls import path
-from .views import invoice_list ,create_inoice ,edit_invocie ,uplaod_sheet ,post_to_auth
+from .views import invoice_list ,create_inoice ,edit_invocie ,uplaod_sheet ,post_to_auth,export_to_excel
 urlpatterns = [
     path('invoice_list' ,invoice_list , name='invoice_list' ),
     path('create_inoice' ,create_inoice , name='create_inoice' ),
      path('edit_invocie/<id>' ,edit_invocie , name='edit_invocie' ),
      path('upload' ,uplaod_sheet, name='upload'),
-     path('post_to_auth/<id> ' ,post_to_auth, name='post_to_auth')
+     path('post_to_auth/<id> ' ,post_to_auth, name='post_to_auth'),
+     path('export_to_excel',export_to_excel,name='export_to_excel')
 ]

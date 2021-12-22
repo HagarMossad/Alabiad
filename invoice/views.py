@@ -16,7 +16,7 @@ import ssl
 import subprocess
 from .column import create_request
 from django.db.models import Q
-
+from .utils import queryset_to_workbook
 
 def invoice_list(request):
     invociesList =    EInvoice.objects.all().order_by('-id')
@@ -25,7 +25,13 @@ def invoice_list(request):
     if request.GET.get("uplaoder_id") :
         invociesList =    EInvoice.objects.filter(uploader_id =request.GET.get("uplaoder_id") ).order_by('-id')
     if request.GET.get("search"):
-        invociesList = invociesList.filter(Q(internalId__icontains=request.GET.get("search")  ) | Q(receiver_name__icontains=request.GET.get("search")))
+        invociesList = invociesList.filter( Q(internalId__icontains=request.GET.get("search")  ) |Q(receiver_name__icontains=request.GET.get("search")))
+    if request.GET.get("from_date"):
+        print("from date")
+        invociesList=invociesList.filter(created_date__gte=request.GET.get("from_date"))
+    if request.GET.get("to_date"):
+        print("to date")
+        invociesList=invociesList.filter(created_date__lte=request.GET.get("to_date"))
     paginator = Paginator(invociesList , 20)
     page_number = request.GET.get('page')
     invocies = paginator.get_page(page_number)
@@ -35,12 +41,53 @@ def invoice_list(request):
         "invoices" : invocies , 
         "fl_select" : fl_select ,
         "uploader_id" : InoiveFile.objects.filter(id = request.GET.get("uplaoder_id")).first() if request.GET.get("uplaoder_id") else  False,
-        "serach_value" : request.GET.get("search") if request.GET.get("search") else ""
+        "serach_value" : request.GET.get("search") if request.GET.get("search") else "",
+        "from_date" : request.GET.get("from_date") if request.GET.get("from_date") else "" ,
+        "to_date" : request.GET.get("to_date") if request.GET.get("to_date") else ""
     }
     return render(request ,page , content ) 
 
 
 
+def export_to_excel(request):
+    invociesList = EInvoice.objects.all().order_by('-id')
+
+    if request.POST.get("uplaoder_id"):
+        invociesList = EInvoice.objects.filter(uploader_id=request.POST.get("uplaoder_id")).order_by('-id')
+    if request.POST.get("search"):
+        invociesList = invociesList.filter(
+            Q(internalId__icontains=request.POST.get("search")) | Q(receiver_name__icontains=request.POST.get("search")))
+    if request.POST.get("from_date"):
+        print("from date")
+        invociesList = invociesList.filter(created_date__gte=request.POST.get("from_date"))
+    if request.GET.get("to_date"):
+        print("to date")
+        invociesList = invociesList.filter(created_date__lte=request.POST.get("to_date"))
+    columns = [
+        "internalId",
+        "documentType",
+        "documentTypeVersion",
+        "dateTimeIssued",
+        "receiver_type",
+        "receiver_id",
+        "receiver_name",
+        "receiver_address_branchId",
+        "receiver_address_country",
+        "receiver_address_governate",
+        "receiver_address_regionCity",
+        "receiver_address_street",
+        "receiver_address_buildingNumber",
+        "netAmount",
+        "taxTotals",
+        "extraDiscountAmount",
+        "totalItemsDiscountAmount",
+        "totalAmount",
+        "totalSalesAmount",
+        "created_date",
+        "submissionId"
+    ]
+    url = queryset_to_workbook(invociesList,columns)
+    return JsonResponse({"url":url})
 
 def create_inoice(request):
     page = 'invoice_create.html'
