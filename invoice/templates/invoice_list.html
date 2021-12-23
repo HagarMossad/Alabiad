@@ -50,12 +50,15 @@
             </select>
         </div>
         <div class="col-md-2">
+            <input type="text" name="customer" class="form-control" id="customer" placeholder="Customer" {% if customer %} value={{ customer }} {% endif %}>
+        </div>
+        <div class="col-md-2">
             <input type="date" name="from_date" class="form-control" id="from_date" {% if from_date %} value={{ from_date }} {% endif %}>
         </div>
         <div class="col-md-2">
             <input type="date" name="to_date" class="form-control" id="to_date" {% if to_date %} value={{ to_date }} {% endif %}>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-1">
            <button type='submit' class="btn btn-danger"> search </button>
       </div>
         
@@ -202,11 +205,12 @@ function rowColors(row, index) {
     console.log('Message from server ', event.data); })
      });
         function exporttoexel(){
-            console.log("hhelo")
+            //console.log("hhelo")
             let from_date = document.getElementById("from_date").value
             let to_date = document.getElementById("to_date").value
             let search = document.getElementById("search").value
             let uplaoder_id = document.getElementById("uplaoder_id")
+            let customer = document.getElementById("customer").value
             uplaoder_id = uplaoder_id.options[uplaoder_id.selectedIndex].text
             var request = $.ajax({
               url: "{% url 'export_to_excel' %}",
@@ -216,7 +220,8 @@ function rowColors(row, index) {
                   "from_date":from_date,
                   "to_date":to_date,
                   "search":search,
-                  "uplaoder_id" :uplaoder_id //uplaoder_id
+                  "uplaoder_id" :uplaoder_id, //uplaoder_id,
+                  "customer":customer
               }
             });
 
