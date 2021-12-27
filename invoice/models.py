@@ -139,6 +139,16 @@ class EInvoice (models.Model) :
     def save(self , *args , **kwargs):
         issuer = PayerAccount.objects.all().first()
         self.issuer_address_street = issuer.issuer_address_street
+        reviever = Receiver.objects.filter(receiver_id = self.receiver_id).first()
+        self.receiver_account = reviever
+        self.receiver_type = reviever.receiver_type
+        self.receiver_name = reviever.receiver_name
+        self.receiver_address_branchId = reviever.receiver_address_branchId
+        self.receiver_address_country = reviever.receiver_address_country
+        self.receiver_address_governate= reviever.receiver_address_governate
+        self.receiver_address_regionCity = reviever.receiver_address_regionCity
+        self.receiver_address_street = reviever.receiver_address_street
+        
         return super(EInvoice, self).save(*args, **kwargs)
 
 @receiver(pre_save ,sender=EInvoice)

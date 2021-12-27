@@ -225,6 +225,7 @@ def create_request(uploader_id , pth):
             for item in items_cols :
                 items_data[item] = data[item].iloc[id]  
             items_list.append(items_data)
+            print(items_data)
             if len(items_list) > 0 :
                 dict_data['items'] = items_list
                 dat_list.append(dict_data)
