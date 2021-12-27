@@ -27,11 +27,11 @@ def invoice_list(request):
     if request.GET.get("search"):
         invociesList = invociesList.filter( Q(internalId__icontains=request.GET.get("search")  ) |Q(receiver_name__icontains=request.GET.get("search")))
     if request.GET.get("from_date"):
-        print("from date")
         invociesList=invociesList.filter(created_date__gte=request.GET.get("from_date"))
     if request.GET.get("to_date"):
-        print("to date")
         invociesList=invociesList.filter(created_date__lte=request.GET.get("to_date"))
+    if request.GET.get("customer"):
+        invociesList = invociesList.filter( Q(receiver_name__icontains=request.GET.get("customer"))| Q(receiver_id__icontains=request.GET.get("customer")  ) )
     paginator = Paginator(invociesList , 20)
     page_number = request.GET.get('page')
     invocies = paginator.get_page(page_number)
@@ -43,7 +43,8 @@ def invoice_list(request):
         "uploader_id" : InoiveFile.objects.filter(id = request.GET.get("uplaoder_id")).first() if request.GET.get("uplaoder_id") else  False,
         "serach_value" : request.GET.get("search") if request.GET.get("search") else "",
         "from_date" : request.GET.get("from_date") if request.GET.get("from_date") else "" ,
-        "to_date" : request.GET.get("to_date") if request.GET.get("to_date") else ""
+        "to_date" : request.GET.get("to_date") if request.GET.get("to_date") else "",
+        "customer": request.GET.get("customer") if request.GET.get("customer") else ""
     }
     return render(request ,page , content ) 
 
@@ -60,9 +61,10 @@ def export_to_excel(request):
     if request.POST.get("from_date"):
         print("from date")
         invociesList = invociesList.filter(created_date__gte=request.POST.get("from_date"))
-    if request.GET.get("to_date"):
-        print("to date")
+    if request.POST.get("to_date"):
         invociesList = invociesList.filter(created_date__lte=request.POST.get("to_date"))
+    if request.POST.get("customer"):
+        invociesList = invociesList.filter( Q(receiver_name__icontains=request.POST.get("customer"))| Q(receiver_id__icontains=request.POST.get("customer")  ) )
     columns = [
         "internalId",
         "documentType",
