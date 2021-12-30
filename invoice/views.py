@@ -52,7 +52,8 @@ def invoice_list(request):
 
 def export_to_excel(request):
     invociesList = EInvoice.objects.all().order_by('-id')
-    
+    if  request.POST.get("uplaoder_id") :
+         fill_uploauded = InoiveFile.objects.filter(status =request.POST.get("uplaoder_id")  ).last()
     if request.POST.get("search"):
         invociesList = invociesList.filter(
             Q(internalId__icontains=request.POST.get("search")) | Q(receiver_name__icontains=request.POST.get("search")))
@@ -64,7 +65,7 @@ def export_to_excel(request):
     if request.POST.get("customer"):
         invociesList = invociesList.filter( Q(receiver_name__icontains=request.POST.get("customer"))| Q(receiver_id__icontains=request.POST.get("customer")  ) )
     if request.POST.get("uplaoder_id"):
-        invociesList = EInvoice.objects.filter(uploader_id=request.POST.get("uplaoder_id"))
+        invociesList = EInvoice.objects.filter(uploader_id=fill_uploauded.id)
     
     columns = [
         "internalId",
