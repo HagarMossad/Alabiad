@@ -61,18 +61,14 @@ class InvoiceLine(models.Model):
             self.itemType    = self.item.itemType
             self.itemCode    = self.item.itemCode
             self.unitType    = self.item.unitType
-        
         total_daiscount  = float(self.discount_amount) * float(self.quantity)
         self.salesTotal = float(self.quantity or 0 )  * float(self.unitValue_amountEGP )
         self.item_tax = 0 
         if self.id :
             for tax in self.taxableItems.all() :
                 self.item_tax += round (float(tax.amount or  0 )  , 5)
-                print("item" ,  self.item_tax)
-
             self.total_taxes_fees = round ((float(self.quantity) * float(self.item_tax)) , 5)
             self.total = round (((float(self.salesTotal) +  float( self.item_tax or 0 )) - total_daiscount) , 5 )
-            print(self.total)
             self.netTotal = float(self.salesTotal) - float(total_daiscount)
         return super(InvoiceLine, self).save(*args, **kwargs)
 
