@@ -113,8 +113,10 @@ class EInvoice (models.Model) :
     salesOrderReference = models.CharField(max_length= 250 , null=True , blank=True)
     salesOrderDescription =  models.CharField(max_length= 250 , null=True , blank=True)
     proformaInvoiceNumber = models.CharField(max_length= 50 , null=True , blank=True)
+    
     payment = models.ForeignKey(Payment , on_delete=models.CASCADE , null=True , blank=True)
-
+    #adding tax table item 
+    taxableitem = models.DecimalField(max_digits=100 , decimal_places=5 ,null=True , blank=True)
     #main Data 
     datetimestr =  models.CharField(max_length= 250 , null=True , blank=True)
     invoiceLines = models.ManyToManyField(InvoiceLine)
@@ -131,19 +133,19 @@ class EInvoice (models.Model) :
     created_date = models.DateTimeField(auto_now_add= True , null =True , blank=True)
     message_Serv = models.TextField(null =True , blank =True   )
 
-
     def save(self , *args , **kwargs):
         issuer = PayerAccount.objects.all().first()
         self.issuer_address_street = issuer.issuer_address_street
         reviever = Receiver.objects.filter(receiver_id = self.receiver_id).first()
-        self.receiver_account = reviever
-        self.receiver_type = reviever.receiver_type
-        self.receiver_name = reviever.receiver_name
-        self.receiver_address_branchId = reviever.receiver_address_branchId
-        self.receiver_address_country = reviever.receiver_address_country
-        self.receiver_address_governate= reviever.receiver_address_governate
-        self.receiver_address_regionCity = reviever.receiver_address_regionCity
-        self.receiver_address_street = reviever.receiver_address_street
+        if reviever: 
+            self.receiver_account = reviever
+            self.receiver_type = reviever.receiver_type
+            self.receiver_name = reviever.receiver_name
+            self.receiver_address_branchId = reviever.receiver_address_branchId
+            self.receiver_address_country = reviever.receiver_address_country
+            self.receiver_address_governate= reviever.receiver_address_governate
+            self.receiver_address_regionCity = reviever.receiver_address_regionCity
+            self.receiver_address_street = reviever.receiver_address_street
         
         return super(EInvoice, self).save(*args, **kwargs)
 

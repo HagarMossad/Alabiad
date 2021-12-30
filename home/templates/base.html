@@ -209,7 +209,7 @@
                           
                        
                     </div>
-                    <button type="submit" class="btn btn-primary"  >{% trans 'Save changes' %}</button>
+                    <button type="submit" class="btn btn-primary"  onclick="CreateRequest()" id="UploadSheetButton" >{% trans 'Save changes' %}</button>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans 'Cancel' %}</button>
                       
@@ -281,7 +281,65 @@
      <script src="{%  static 'js/demo/chart-area-demo.js' %}"></script>
     <script src="{% static 'js/demo/chart-pie-demo.js' %}"></script>
    
+<script>
 
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+function CreateRequest(){
+    // document.getElementById("UploadSheetButton").disabled = true;
+    $('#myModal').modal('hide')
+
+    var modal = document.getElementById('#myModal')
+    modal.innerHTML("Heelo ")
+    var  formData = new FormData();
+    var aFiles = document.getElementById("exampleFormControlFile1").files[0]
+    //
+    
+    let url = "{% url 'upload' %}"
+    formData.append( 'myfile', aFiles)  
+    formData.append("sheettitle" ,"sheettitle")
+    $.ajax({
+            type: "POST",
+            url: url,
+            headers: { 'X-CSRFToken': csrftoken },
+            async: false,
+            cache: false,
+            contentType: false,
+            enctype: 'multipart/form-data',
+            processData: false,
+            data: 
+              
+                 formData
+                 
+                
+            ,
+            success: function (data) {
+                ;
+                consoel.log("get")
+            }
+        
+        
+        })
+   
+  
+}
+
+</script>
     <!-- <script type="text/javascript">
         $(document).ready(function(){
             let socket = new WebSocket("ws://127.0.0.1:8765");

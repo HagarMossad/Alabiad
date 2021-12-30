@@ -52,9 +52,7 @@ def invoice_list(request):
 
 def export_to_excel(request):
     invociesList = EInvoice.objects.all().order_by('-id')
-
-    if request.POST.get("uplaoder_id"):
-        invociesList = EInvoice.objects.filter(uploader_id=request.POST.get("uplaoder_id")).order_by('-id')
+    
     if request.POST.get("search"):
         invociesList = invociesList.filter(
             Q(internalId__icontains=request.POST.get("search")) | Q(receiver_name__icontains=request.POST.get("search")))
@@ -65,6 +63,9 @@ def export_to_excel(request):
         invociesList = invociesList.filter(created_date__lte=request.POST.get("to_date"))
     if request.POST.get("customer"):
         invociesList = invociesList.filter( Q(receiver_name__icontains=request.POST.get("customer"))| Q(receiver_id__icontains=request.POST.get("customer")  ) )
+    if request.POST.get("uplaoder_id"):
+        invociesList = EInvoice.objects.filter(uploader_id=request.POST.get("uplaoder_id"))
+    
     columns = [
         "internalId",
         "documentType",
@@ -159,22 +160,38 @@ def edit_invocie(request, id):
 
     }
     return render(request , page ,content)
+
+def upload_page(request, id):
+    page = "upload_page.html"
+    a = InoiveFile.objects.filter(id=id).first()
+    success = create_request(a.id , a.sheet.path)
+    if success.get('error') :
+            return render (request , "error.html" , {'message': success.get('error') })
+    return render(request , page)
+        
 def uplaod_sheet(request):
+    fl_select = {}
     if request.method== 'POST' :
+        print("Dataaaaa" , request)
+        print(request.POST.get('myfile'))
         a = InoiveFile(
             status = request.POST.get('sheettitle') ,
             sheet =request.FILES['myfile'] )
         a.save()
+        return redirect('upload_page' ,id =a.id)
+        fl_select = [{"id" :a.id , "value" : a.status } ] 
         success = create_request(a.id , a.sheet.path)
         if success.get('error') :
             return render (request , "error.html" , {'message': success.get('error') })
+    
+        
     invociesList =    EInvoice.objects.all().order_by('-id')
     fill_uploauded = InoiveFile.objects.all().order_by('-id')
     paginator = Paginator(invociesList , 20)
     # page_number = request.GET.get('page')
     invocies = paginator.get_page(1)
     page = 'invoice_list.html'
-    fl_select = [{"id" :a.id , "value" : a.status } ] 
+    
     content = {
         "invoices" : invocies , 
         "fl_select" : fl_select

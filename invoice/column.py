@@ -100,7 +100,7 @@ def post_to_auth_upload(id):
 		              'salesTotal'      :round(float(item.salesTotal or 0 ) ,5),
 		              'total'           :round( float(item.total or 0) , 5) ,
 		              'valueDifference' :float(item.valueDifference or 0) , 
-		              'totalTaxableFees': 0 ,#float(item.total_taxable_fees or 0),
+		              'totalTaxableFees': round(float(item.totalTaxableFees or 0 ) , 5) ,#float(item.total_taxable_fees or 0),
 		              'netTotal'        :round(float(item.netTotal or 0) , 5 )  ,
 		              'itemsDiscount'   : 0, #round((item.item_discount * item.quantity) , 5),
 		              'unitValue'       :   {
@@ -317,52 +317,74 @@ def e_invoice_form(data):
             taxes = line.get('Item Tax (Item)')
             # # taxes_list = [{tax.}]
             tax_cat =  TaXCategory.objects.filter(name =taxes).first()
-            if not tax_cat :
-                return {'error':"Not valid tax Category"}
-            # unitValue = line.get('unitValue')
-            ic_invoice.invoiceLines.create(
-                
-                    description = line.get('Description (Item)'),
-                    itemType = line.get('Item Type (Item)'),
-                    itemCode = line.get('Code (Item)'),
-                    unitType = line.get('UOM (Item)') ,
-                    quantity = float(line.get('QTY (Item)')),
-                    unitValue_currencySold = 'EGP',
-                    unitValue_amountEGP  = round(float(line.get('Rate (Item)') or 0 ) , 4) ,
-                    parent_type = "EInvoice" ,
-                    parent_id= ic_invoice.id,
-                    tax_cat = tax_cat ,
-                    discount_amount =float( line.get('Discount (Item)')),
-                    rd_tax   = float(line.get('Tax Amount'))
+            if  tax_cat :
+                ic_invoice.invoiceLines.create(
+                    
+                        description = line.get('Description (Item)'),
+                        itemType = line.get('Item Type (Item)'),
+                        itemCode = line.get('Code (Item)'),
+                        unitType = line.get('UOM (Item)') ,
+                        quantity = float(line.get('QTY (Item)')),
+                        unitValue_currencySold = 'EGP',
+                        unitValue_amountEGP  = round(float(line.get('Rate (Item)') or 0 ) , 4) ,
+                        parent_type = "EInvoice" ,
+                        parent_id= ic_invoice.id,
+                        tax_cat = tax_cat ,
+                        discount_amount =float( line.get('Discount (Item)')),
+                        rd_tax   = float(line.get('Tax Amount'))
 
 
 
-            )
+                )
+            else:
+                ic_invoice.invoiceLines.create(
+                    
+                        description = line.get('Description (Item)'),
+                        itemType = line.get('Item Type (Item)'),
+                        itemCode = line.get('Code (Item)'),
+                        unitType = line.get('UOM (Item)') ,
+                        quantity = float(line.get('QTY (Item)')),
+                        unitValue_currencySold = 'EGP',
+                        unitValue_amountEGP  = round(float(line.get('Rate (Item)') or 0 ) , 4) ,
+                        parent_type = "EInvoice" ,
+                        parent_id= ic_invoice.id,
+                        discount_amount =float( line.get('Discount (Item)')),
+                      
+
+
+
+                )
+
             ic_invoice.save()
         tax_types = {}
+        taxableitem = 0
         for line in ic_invoice.invoiceLines.all():
-                
-                for tax in  line.tax_cat.tax_table.all() :
-                    rate =tax.rate 
-                    amount = tax.amount
-                    if tax.rate and tax.rate != 0  :
-                        #amount = ((float(rate) / 100 ) * (float(line.unitValue_amountEGP or 0  ) )) - float(line.discount_amount or 0 )
-                        amount = (float(line.unitValue_amountEGP or 0) - float(line.discount_amount or 0 )) * (float(rate) / 100 )
-                    elif tax.subType == "RD02" or tax.subType == "ST02":
-                        amount = float(line.rd_tax or 0)/ float(line.quantity or 0)
-               
-                    amount=  float(amount or 0) * float(line.quantity or 0)
-                    in_tax = taxableItems(taxType = tax.taxType , rate = tax.rate ,
-                    subType = tax.subType , amount = round(amount , 4)  , parent_id = line.id , parent_type = 'invoiceLines')
-                    for k , v in tax_types.items() :
-                            if k ==  tax.taxType :
-                                tax_types[k] = float(v) + float(amount)
-                    if tax.taxType  not in  tax_types.keys() :
-                        tax_types[tax.taxType] = float(amount) 
+                total_taxes_fees = 0 
+                if line.tax_cat :
+                    for tax in  line.tax_cat.tax_table.all() :
+                        rate =tax.rate 
+                        amount = tax.amount
+                        if tax.rate and tax.rate != 0  :
+                            amount = (float(line.unitValue_amountEGP or 0) - float(line.discount_amount or 0 )) * (float(rate) / 100 )
+                        elif tax.subType == "RD02" or tax.subType == "ST02":
+                            amount = float(line.rd_tax or 0)
+                            total_taxes_fees += amount
+                        if  tax.subType != "ST02":
+                            amount=  float(amount or 0) * float(line.quantity or 0)
 
-                    in_tax.save()
-                    line.taxableItems.add(in_tax)
-                    line.save()
+                        in_tax = taxableItems(taxType = tax.taxType , rate = tax.rate ,
+                        subType = tax.subType , amount = round(amount , 4)  , parent_id = line.id , parent_type = 'invoiceLines')
+                        for k , v in tax_types.items() :
+                                if k ==  tax.taxType :
+                                    tax_types[k] = float(v) + float(amount)
+                        if tax.taxType  not in  tax_types.keys() :
+                            tax_types[tax.taxType] = float(amount) 
+                        in_tax.save()
+                        line.totalTaxableFees = total_taxes_fees
+                        taxableitem += total_taxes_fees
+                        line.taxableItems.add(in_tax)
+                        line.save()
+        ic_invoice.taxableitem = taxableitem
         for k,v in tax_types.items() :
             a =TaxTotals(taxType = k , amount = v , parent_id = ic_invoice.id , parent_type = "EInvoice" )
             a.save()
