@@ -95,7 +95,7 @@ def post_to_auth_upload(id):
 		              'itemType'        :item.itemType,
 		              'itemCode'        :item.itemCode,
 		              'unitType'        :item.unitType,
-		              'quantity'        :int(item.quantity),
+		              'quantity'        :float(item.quantity),
 		              'internalCode'    :item.itemCode,
 		              'salesTotal'      :round(float(item.salesTotal or 0 ) ,5),
 		              'total'           :round( float(item.total or 0) , 5) ,
