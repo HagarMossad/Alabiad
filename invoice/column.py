@@ -35,6 +35,9 @@ items_cols = [
                 'Rate (Item)',
                 'Discount (Item)',
                 'Item Tax (Item)',
+                'amountSold(Item)' ,
+                'currencySold(Item)' , 
+                'currencyExchangeRate(Item)' , 
                 'Tax Amount']
 
 
@@ -95,7 +98,7 @@ def post_to_auth_upload(id):
 		              'itemType'        :item.itemType,
 		              'itemCode'        :item.itemCode,
 		              'unitType'        :item.unitType,
-		              'quantity'        :int(item.quantity),
+		              'quantity'        :float(item.quantity),
 		              'internalCode'    :item.itemCode,
 		              'salesTotal'      :round(float(item.salesTotal or 0 ) ,5),
 		              'total'           :round( float(item.total or 0) , 5) ,
@@ -106,8 +109,8 @@ def post_to_auth_upload(id):
 		              'unitValue'       :   {
 		                                    'currencySold'        :item.unitValue_currencySold,
 		                                    'amountEGP'           :round(float(item.unitValue_amountEGP) , 5),
-		                                    'amountSold'          :float(item.unitValue_amountSold or 0),
-		                                    'currencyExchangeRate':float(item.unitValue_currencyExchangeRate or 0 ),
+		                                    'amountSold'          :round(float(item.unitValue_amountSold or 0) , 5) if item.unitValue_currencySold != 'EGP' else None,
+		                                    'currencyExchangeRate': round(float(item.unitValue_currencyExchangeRate or 1 ) , 5) if item.unitValue_currencySold != 'EGP' else None,
 		                                    },
 		              'discount'        :  {
 		                                   'rate':0,
@@ -154,6 +157,9 @@ def post_to_auth_upload(id):
 				"Accept-Language" : "ar" ,
 				'Content-Type'    :'application/json' 
 				 }
+
+    import sys
+    
     if invoice.documentTypeVersion == "0.9"  :
         print(invoice.documentTypeVersion )
         c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
@@ -278,7 +284,7 @@ def create_request(uploader_id , pth):
 def e_invoice_form(data):
      
         invoice = data
-        
+        print(data)
         ic_invoice = EInvoice()
         issuer                                   = invoice.get('issuer')
         ic_invoice.uploader_id                   = str(invoice.get('uploader_id'))
@@ -317,16 +323,27 @@ def e_invoice_form(data):
             taxes = line.get('Item Tax (Item)')
             # # taxes_list = [{tax.}]
             tax_cat =  TaXCategory.objects.filter(name =taxes).first()
+            currency = line.get('currencySold(Item)') 
+            print("currency" , currency )
+            exchangerate = 1 
+            # if currency == 'nan'  :
+
+            #     currency = 'EGP' 
+            if float(line.get('currencyExchangeRate(Item)') or 1 )  != 1:
+                 exchangerate = float(line.get('currencyExchangeRate(Item)') or 1 )
             if  tax_cat :
+                
                 ic_invoice.invoiceLines.create(
-                    
+                        
                         description = line.get('Description (Item)'),
                         itemType = line.get('Item Type (Item)'),
                         itemCode = line.get('Code (Item)'),
                         unitType = line.get('UOM (Item)') ,
                         quantity = float(line.get('QTY (Item)')),
-                        unitValue_currencySold = 'EGP',
-                        unitValue_amountEGP  = round(float(line.get('Rate (Item)') or 0 ) , 4) ,
+                        unitValue_currencySold = currency,
+                        unitValue_currencyExchangeRate =  float(exchangerate or 1 ) ,#float(line.get('currencyExchangeRate(Item)') or 0 ), 
+                        unitValue_amountSold =round(float(line.get('Rate (Item)') or 0 ) ,4 )  ,
+                        unitValue_amountEGP  = round ((round(float(line.get('Rate (Item)') or 0 )  , 4) * float(exchangerate or 1) ) , 4 ),
                         parent_type = "EInvoice" ,
                         parent_id= ic_invoice.id,
                         tax_cat = tax_cat ,
@@ -344,8 +361,10 @@ def e_invoice_form(data):
                         itemCode = line.get('Code (Item)'),
                         unitType = line.get('UOM (Item)') ,
                         quantity = float(line.get('QTY (Item)')),
-                        unitValue_currencySold = 'EGP',
-                        unitValue_amountEGP  = round(float(line.get('Rate (Item)') or 0 ) , 4) ,
+                        unitValue_currencySold = currency,
+                        unitValue_currencyExchangeRate =  exchangerate ,#float(line.get('currencyExchangeRate(Item)') or 0 ), 
+                        unitValue_amountSold =round(float(line.get('Rate (Item)') or 0 ) ,4 )  ,
+                        unitValue_amountEGP  = round ((round(float(line.get('Rate (Item)') or 0 )  , 4) * exchangerate ) , 4 ),
                         parent_type = "EInvoice" ,
                         parent_id= ic_invoice.id,
                         discount_amount =float( line.get('Discount (Item)')),
@@ -502,7 +521,7 @@ def create_e_invoice(data):
         a.save()
         ic_invoice.taxTotals.add(a)
         ic_invoice.save()
-    print("ic invvv",ic_invoice)
+  
     response = post_to_auth_upload(ic_invoice.id)
     ic_invoice.message_Serv = response
     ic_invoice.save()
