@@ -109,8 +109,8 @@ def post_to_auth_upload(id):
 		              'unitValue'       :   {
 		                                    'currencySold'        :item.unitValue_currencySold,
 		                                    'amountEGP'           :round(float(item.unitValue_amountEGP) , 5),
-		                                    'amountSold'          :round(float(item.unitValue_amountSold or 0) , 5) if item.unitValue_currencySold != 'EGP' else None,
-		                                    'currencyExchangeRate': round(float(item.unitValue_currencyExchangeRate or 1 ) , 5) if item.unitValue_currencySold != 'EGP' else None,
+		                                    'amountSold'          :round(float(item.unitValue_amountSold or 0) , 5) if item.unitValue_currencySold != 'EGP' else 0,
+		                                    'currencyExchangeRate': round(float(item.unitValue_currencyExchangeRate or 1 ) , 5) if item.unitValue_currencySold != 'EGP' else 0,
 		                                    },
 		              'discount'        :  {
 		                                   'rate':0,
@@ -136,7 +136,7 @@ def post_to_auth_upload(id):
         "taxTotals"                : [
             {
                 "taxType" : tax_e.taxType ,
-                "amount" : abs(round( float (tax_e.amount or 0),4))
+                "amount" : abs(round( float (tax_e.amount or 0),5))
             }
         for tax_e in  
         invoice.taxTotals.all()],#invoice.taxTotals.all(),
@@ -168,6 +168,7 @@ def post_to_auth_upload(id):
         data = res.read()
         return ({'message' : str(data)})
     if invoice.documentTypeVersion == "1.0"  :
+        print("formmmmmmmmmmmmmyyyyyy",form)
         main_data={}
         try :
           os.remove('C:/j/sFile.txt')
@@ -341,9 +342,9 @@ def e_invoice_form(data):
                         unitType = line.get('UOM (Item)') ,
                         quantity = float(line.get('QTY (Item)')),
                         unitValue_currencySold = currency,
-                        unitValue_currencyExchangeRate =  float(exchangerate or 1 ) ,#float(line.get('currencyExchangeRate(Item)') or 0 ), 
-                        unitValue_amountSold =round(float(line.get('Rate (Item)') or 0 ) ,4 )  ,
-                        unitValue_amountEGP  = round ((round(float(line.get('Rate (Item)') or 0 )  , 4) * float(exchangerate or 1) ) , 4 ),
+                        unitValue_currencyExchangeRate =  float(exchangerate or 1 )if currency !="EGP" else 0  ,#float(line.get('currencyExchangeRate(Item)') or 0 ), 
+                        unitValue_amountSold =round(float(line.get('Rate (Item)') or 0 ) ,5 ) if currency !="EGP" else 0 ,
+                        unitValue_amountEGP  = round ((round(float(line.get('Rate (Item)') or 1 )  , 5) * float(exchangerate or 1) ) , 5 ),
                         parent_type = "EInvoice" ,
                         parent_id= ic_invoice.id,
                         tax_cat = tax_cat ,
@@ -363,8 +364,8 @@ def e_invoice_form(data):
                         quantity = float(line.get('QTY (Item)')),
                         unitValue_currencySold = currency,
                         unitValue_currencyExchangeRate =  exchangerate ,#float(line.get('currencyExchangeRate(Item)') or 0 ), 
-                        unitValue_amountSold =round(float(line.get('Rate (Item)') or 0 ) ,4 )  ,
-                        unitValue_amountEGP  = round ((round(float(line.get('Rate (Item)') or 0 )  , 4) * exchangerate ) , 4 ),
+                        unitValue_amountSold =round(float(line.get('Rate (Item)') or 0 ) ,5 )  ,
+                        unitValue_amountEGP  = round ((round(float(line.get('Rate (Item)') or 0 )  , 5) * exchangerate ) , 5 ),
                         parent_type = "EInvoice" ,
                         parent_id= ic_invoice.id,
                         discount_amount =float( line.get('Discount (Item)')),

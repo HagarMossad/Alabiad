@@ -6,7 +6,7 @@ from base64 import b64encode
 import ssl
 import json
 from payer.models import PayerAccount
-url = 'id.preprod.eta.gov.eg'
+url = 'id.eta.gov.eg'
 method= '/connect/token'
 
 
@@ -56,7 +56,7 @@ def home(request):
         number = int(request.GET.get('page'))
 
 
-    c = HTTPSConnection('api.preprod.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
+    c = HTTPSConnection('api.invoicing.eta.gov.eg' ,context=ssl._create_unverified_context())
     c.request('GET', f'/api/v1.0/documents/recent?pageNo={number}&pageSize=20' ,headers=headers  )
     res = c.getresponse()
     data = res.read()
