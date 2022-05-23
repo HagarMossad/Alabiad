@@ -226,7 +226,7 @@ def post_to_auth(request , id ):
                 } ,
          "receiver":{ 
 									 "name"   : invoice.receiver_name ,
-									 "id"     : invoice.receiver_id or "",
+									 "id"     : invoice.receiver_id if invoice.receiver_id !='nan' else '',
 									 "type"   : invoice.receiver_type  ,
 									 "address": {
 									 			   "branchID"      :invoice.receiver_address_branchId or ''  ,
