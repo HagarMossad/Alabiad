@@ -165,9 +165,14 @@ def edit_invocie(request, id):
 def upload_page(request, id):
     page = "upload_page.html"
     a = InoiveFile.objects.filter(id=id).first()
-    success = create_request(a.id , a.sheet.path)
-    if success.get('error') :
+    try:
+        success = create_request(a.id , a.sheet.path)
+        if success.get('error') :
             return render (request , "error.html" , {'message': success.get('error') })
+    except Exception as ex:
+        return render (request , "error.html" , {'message': str(ex) })
+
+    
     return render(request , page)
         
 def uplaod_sheet(request):

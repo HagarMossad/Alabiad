@@ -112,6 +112,7 @@ class EInvoice (models.Model) :
     purchaseOrderDescription = models.CharField(max_length= 250 , null=True , blank=True)
     salesOrderReference = models.CharField(max_length= 250 , null=True , blank=True)
     salesOrderDescription =  models.CharField(max_length= 250 , null=True , blank=True)
+    #delivery =  models.CharField(max_length= 250 , null=True , blank=True)
     proformaInvoiceNumber = models.CharField(max_length= 50 , null=True , blank=True)
     
     payment = models.ForeignKey(Payment , on_delete=models.CASCADE , null=True , blank=True)

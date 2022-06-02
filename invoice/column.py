@@ -9,6 +9,7 @@ from http.client import HTTPSConnection
 from base64 import b64encode
 import ssl
 import os
+import numpy as np
 columns = ['Series',
 'Type',
 'Document Type',
@@ -24,6 +25,9 @@ columns = ['Series',
 'Receiver Building Number',
 'Date TimeIssued',
 'Internal Id',
+'Sales Order Reference',
+'Purchase Order Reference',
+'Extra Discount Amount'
            ]
 
 items_cols = [
@@ -85,11 +89,12 @@ def post_to_auth_upload(id):
         "dateTimeIssued"            :invoice.datetimestr ,
         "taxpayerActivityCode"     : str(invoice.taxpayerActivityCode ) ,
         "internalID"               : str(invoice.internalId or ''),
-        "purchaseOrderReference"   : "",#str(self.purchase_order_reference or ''),
+        "purchaseOrderReference"   : str(invoice.purchaseOrderReference or ''),
         "purchaseOrderDescription" : "" ,
-        "salesOrderReference"      : "" ,
+        "salesOrderReference"      : str(invoice.salesOrderReference or '') ,
         "salesOrderDescription"    : "" ,
         "proformaInvoiceNumber"    : "" ,
+        # "delivery"                 : str(invoice.delivery or ''),
         
 
         #Item section 
@@ -140,8 +145,8 @@ def post_to_auth_upload(id):
             }
         for tax_e in  
         invoice.taxTotals.all()],#invoice.taxTotals.all(),
-        "totalAmount"              :float(invoice.totalAmount or 0)   ,
-        "extraDiscountAmount"      :0,
+        "totalAmount"              :float(invoice.totalAmount or 0)  -float(invoice.extraDiscountAmount or 0) ,
+        "extraDiscountAmount"      :float(invoice.extraDiscountAmount or 0),  #extraDiscountAmount
         "totalItemsDiscountAmount" :0 ,
 
 
@@ -230,7 +235,9 @@ def create_request(uploader_id , pth):
                 except:
                     return ({"erro" : col_name +'not found'})
             for item in items_cols :
-                items_data[item] = data[item].iloc[id]  
+                #print("item ============================> ",item in data.keys())
+                if item in data.keys():
+                    items_data[item] = data[item].iloc[id]  
             items_list.append(items_data)
             print(items_data)
             if len(items_list) > 0 :
@@ -316,6 +323,10 @@ def e_invoice_form(data):
         ic_invoice.documentType = invoice.get('Document Type')
         ic_invoice.documentTypeVersion= str(issuer.get('documentTypeVersion'))
         ic_invoice.taxpayerActivityCode = invoice.get('taxpayerActivityCode')
+        ic_invoice.salesOrderReference = invoice.get('Sales Order Reference')
+        ic_invoice.purchaseOrderReference = invoice.get('Purchase Order Reference')
+        ic_invoice.extraDiscountAmount = float(invoice.get('Extra Discount Amount') or 0) if not np.isnan(invoice.get('Extra Discount Amount')) else 0
+        # ic_invoice.delivery = invoice.get('Delivery Note')
         ic_invoice.internalId = str(invoice.get('Internal Id')).split('.')[0]
         ic_invoice.save()
         #set Invoice Items 
@@ -330,8 +341,9 @@ def e_invoice_form(data):
             # if currency == 'nan'  :
 
             #     currency = 'EGP' 
+            
             if float(line.get('currencyExchangeRate(Item)') or 1 )  != 1:
-                 exchangerate = float(line.get('currencyExchangeRate(Item)') or 1 )
+                 exchangerate = float(line.get('currencyExchangeRate(Item)') or 1 ) if not np.isnan(line.get('currencyExchangeRate(Item)')) else 1
             if  tax_cat :
                 
                 ic_invoice.invoiceLines.create(
@@ -349,7 +361,7 @@ def e_invoice_form(data):
                         parent_id= ic_invoice.id,
                         tax_cat = tax_cat ,
                         discount_amount =float( line.get('Discount (Item)')),
-                        rd_tax   = float(line.get('Tax Amount'))
+                        rd_tax   = float(line.get('Tax Amount') or 0) if not np.isnan(line.get('Tax Amount')) else 0
 
 
 
