@@ -138,9 +138,19 @@ class EInvoice (models.Model) :
         issuer = PayerAccount.objects.all().first()
         self.issuer_address_street = issuer.issuer_address_street
         reviever = Receiver.objects.filter(receiver_id = self.receiver_id).first()
+        resever_type = ['P' , 'B' , 'F']
+       
+       
         if reviever: 
+            r_tpye = reviever.receiver_type
+            
+            if r_tpye not in resever_type :
+                if r_tpye == 'Individual'  :
+                    r_tpye = 'P'
+                elif r_tpye == 'Company'  :
+                    r_tpye = 'B'
             self.receiver_account = reviever
-            self.receiver_type = reviever.receiver_type
+            self.receiver_type = reviever.r_tpye
             self.receiver_name = reviever.receiver_name
             self.receiver_address_branchId = reviever.receiver_address_branchId
             self.receiver_address_country = reviever.receiver_address_country
