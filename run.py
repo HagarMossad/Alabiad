@@ -2,6 +2,12 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import json
+f = open('D:/dynamic-einvoice/e_inoivce-windows/backage.json')
+  
+# returns JSON object as 
+# a dictionary
+data = json.load(f)
 
-
-os.system("python manage.py runserver 0.0.0.0:8000")
+print("urlllllllll",data[0].get("url"))
+os.system(data[0].get("url"))
