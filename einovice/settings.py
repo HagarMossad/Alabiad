@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'payer',
     'tax' ,
     'reports',
-    'next_apis'
+    'next_apis',
+    'ereciept'
 ]
 
 MIDDLEWARE = [

@@ -25,5 +25,6 @@ urlpatterns = [
      path('taxes/ ', include('tax.urls')) ,
      path('main/' , include('invoice.urls')) ,
      path('reports/' , include('reports.urls')),
+     path('ereciept/' , include('ereciept.urls')),
      path('api/', include('next_apis.urls'))
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) +static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
